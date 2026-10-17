@@ -1,0 +1,490 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Surreal Prompt Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;1,6..96,500;1,6..96,700&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: painted-sky band on top, control "easel" on the left, idea cards hung on the right like a gallery wall */
+:root{
+  --bg:#EDF1F6; --surface:#FFFFFF; --ink:#17223A; --muted:#58647E; --line:#D2DAE6;
+  --sky1:#5F8FCB; --sky2:#BED4EC; --cloud:rgba(255,255,255,.85);
+  --accent:#B21F2A; --accent-ink:#FFFFFF; --chip:#E2E9F3; --prompt:#F5F7FB;
+  --display:"Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0D1322; --surface:#151D31; --ink:#E6EBF4; --muted:#97A2BA; --line:#283350;
+  --sky1:#141F42; --sky2:#2F4377; --cloud:rgba(205,215,240,.16);
+  --accent:#E5474F; --accent-ink:#FFFFFF; --chip:#202A44; --prompt:#10172A; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0D1322; --surface:#151D31; --ink:#E6EBF4; --muted:#97A2BA; --line:#283350;
+  --sky1:#141F42; --sky2:#2F4377; --cloud:rgba(205,215,240,.16);
+  --accent:#E5474F; --accent-ink:#FFFFFF; --chip:#202A44; --prompt:#10172A; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+
+header.sky{
+  background:
+    radial-gradient(ellipse 160px 46px at 78% 38%, var(--cloud) 60%, transparent 62%),
+    radial-gradient(ellipse 110px 40px at 84% 30%, var(--cloud) 60%, transparent 62%),
+    radial-gradient(ellipse 120px 34px at 14% 70%, var(--cloud) 60%, transparent 62%),
+    radial-gradient(ellipse 80px 30px at 20% 62%, var(--cloud) 60%, transparent 62%),
+    linear-gradient(180deg, var(--sky1), var(--sky2));
+  color:#fff; border-bottom:1px solid var(--line);
+}
+header .wrap{padding-block:36px 30px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+h1{font-family:var(--display);font-style:italic;font-weight:700;font-size:clamp(34px,6vw,58px);line-height:1;margin:0;letter-spacing:-.01em;text-wrap:balance;text-shadow:0 1px 14px rgba(10,20,50,.25)}
+h1 span{font-style:normal;font-weight:500}
+.tagline{margin:10px 0 0;max-width:46ch;font-size:15px;opacity:.95;text-shadow:0 1px 8px rgba(10,20,50,.3)}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+button{font:inherit;cursor:pointer;border-radius:999px;border:1px solid transparent;padding:10px 18px;font-weight:600;transition:transform .12s, background .15s, border-color .15s}
+button:focus-visible, select:focus-visible, input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-surprise{background:#fff;color:#17223A;border-color:rgba(255,255,255,.6);display:inline-flex;align-items:center;gap:8px}
+.btn-surprise svg{width:18px;height:18px}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn-ghost:hover{border-color:var(--muted)}
+.btn-sm{padding:6px 12px;font-size:13px}
+
+main.wrap{display:grid;grid-template-columns:340px minmax(0,1fr);gap:28px;padding-block:28px 60px;align-items:start}
+@media (max-width:860px){ main.wrap{grid-template-columns:minmax(0,1fr)} }
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:18px}
+@media (min-width:861px){ .panel{position:sticky;top:calc(env(safe-area-inset-top, 0px) + 12px);max-height:calc(100vh - 24px);overflow:auto} }
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{font-family:var(--display);font-style:italic;font-size:19px;padding:0;margin-bottom:6px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+select, input[type=text]{width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+select.set{border-color:var(--accent);background:var(--surface)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:flex;border:1px solid var(--line);border-radius:999px;padding:3px;gap:3px;background:var(--bg)}
+.seg button{flex:1;padding:6px 8px;font-size:13px;font-weight:600;background:transparent;color:var(--muted);border-radius:999px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.hint{font-size:12.5px;color:var(--muted);margin:0}
+.panel-actions{display:flex;gap:8px;flex-wrap:wrap}
+.panel-actions .btn-primary{flex:1}
+
+.results-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px}
+.results-head h2{font-family:var(--display);font-style:italic;font-size:28px;margin:0;font-weight:500}
+.tabs{display:flex;gap:6px}
+.tabs button{padding:6px 14px;font-size:13px;background:transparent;color:var(--muted);border-color:var(--line)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:18px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0;animation:rise .4s ease both}
+@keyframes rise{from{transform:translateY(6px)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.card{animation:none}button{transition:none}}
+.card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.card h3{font-family:var(--display);font-style:italic;font-weight:500;font-size:23px;line-height:1.15;margin:0;text-wrap:balance}
+.no{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap;padding-top:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;background:var(--chip);border-radius:999px;padding:3px 10px;color:var(--ink)}
+.chip.red{background:var(--accent);color:var(--accent-ink)}
+.prompt{font-family:var(--mono);font-size:12.8px;line-height:1.6;background:var(--prompt);border:1px solid var(--line);border-radius:10px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;user-select:all}
+.card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.saved-on{border-color:var(--accent)!important;color:var(--accent)!important}
+.empty{border:1px dashed var(--line);border-radius:14px;padding:28px;color:var(--muted);text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 18px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+</style>
+
+<header class="sky">
+  <div class="wrap">
+    <div>
+      <h1>Surreal <span>Prompt</span> Studio</h1>
+      <p class="tagline">Combine a surreal device, a subject, a meaning and a medium. Fix the parts you care about, leave the rest to chance.</p>
+    </div>
+    <div class="hero-actions">
+      <button class="btn-surprise" id="surpriseTop" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg>
+        Surprise me
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <form class="panel" id="controls" autocomplete="off">
+    <fieldset>
+      <legend>The idea</legend>
+      <div class="field"><label for="f-device">Surreal device</label><select id="f-device"></select></div>
+      <div class="field"><label for="f-theme">Meaning / theme</label><select id="f-theme"></select></div>
+      <div class="field"><label for="f-subject">Subject</label><select id="f-subject"></select></div>
+      <div class="field"><label for="f-custom">Or write your own subject</label><input type="text" id="f-custom" placeholder="e.g. an old tar player in a blue coat"></div>
+      <div class="field"><label for="f-object">Key object</label><select id="f-object"></select></div>
+      <div class="row2">
+        <div class="field"><label for="f-material">Material</label><select id="f-material"></select></div>
+        <div class="field"><label for="f-world">Hidden world</label><select id="f-world"></select></div>
+      </div>
+      <div class="field"><label for="f-setting">Setting</label><select id="f-setting"></select></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>The form</legend>
+      <div class="field"><label for="f-medium">Result</label><select id="f-medium"></select></div>
+      <div class="field"><label for="f-lineage">Style lineage</label><select id="f-lineage"></select></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>The look</legend>
+      <div class="row2">
+        <div class="field"><label for="f-palette">Palette</label><select id="f-palette"></select></div>
+        <div class="field"><label for="f-light">Light</label><select id="f-light"></select></div>
+        <div class="field"><label for="f-comp">Composition</label><select id="f-comp"></select></div>
+        <div class="field"><label for="f-mood">Mood</label><select id="f-mood"></select></div>
+      </div>
+      <div class="field"><label for="f-extra">Extra detail (optional)</label><input type="text" id="f-extra" placeholder="e.g. a crescent moon in daylight"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Output</legend>
+      <div class="field"><label>Twists per image</label>
+        <div class="seg" data-seg="twists"><button type="button" data-v="1" aria-pressed="true">One, clean</button><button type="button" data-v="2" aria-pressed="false">Two, layered</button></div></div>
+      <div class="field"><label>Ideas per run</label>
+        <div class="seg" data-seg="count"><button type="button" data-v="1" aria-pressed="false">1</button><button type="button" data-v="3" aria-pressed="false">3</button><button type="button" data-v="6" aria-pressed="true">6</button></div></div>
+      <div class="row2">
+        <div class="field"><label for="f-ar">Aspect ratio</label><select id="f-ar"></select></div>
+        <div class="field"><label for="f-format">Prompt format</label><select id="f-format"></select></div>
+      </div>
+      <p class="hint">Any field left on <strong>Random</strong> changes with every idea. Fixed fields get a red outline.</p>
+    </fieldset>
+
+    <div class="panel-actions">
+      <button class="btn-primary" type="submit">Generate ideas</button>
+      <button class="btn-ghost" type="button" id="surpriseSide">Surprise</button>
+      <button class="btn-ghost" type="button" id="reset">Reset</button>
+    </div>
+  </form>
+
+  <section aria-live="polite">
+    <div class="results-head">
+      <h2 id="resultsTitle">Fresh ideas</h2>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" aria-selected="true" data-tab="ideas">Ideas</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="saved">Saved <span id="savedCount"></span></button>
+        <button type="button" class="btn-ghost btn-sm" id="copyAll">Copy all</button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+// ---------- Vocabulary ----------
+const DEVICES = [
+  {id:"vessel", label:"Head as a vessel", f:c=>`${c.S}, the top of the head opened like a bowl and holding ${c.A}`},
+  {id:"replaced", label:"Head replaced by an object", f:c=>`${c.S} whose head is replaced entirely by ${c.O.a}, posed calmly as if nothing were unusual`},
+  {id:"sliced", label:"Sliced into floating bands", f:c=>`${c.S}, the face sliced into floating horizontal bands with open sky visible between each slice`},
+  {id:"cutout", label:"Body as a window", f:c=>`${c.S} with a silhouette-shaped opening cut clean through the body, revealing ${c.A} inside`},
+  {id:"portal", label:"Doorway to elsewhere", f:c=>`a free-standing doorway alone in the scene, opening onto ${c.A}, and ${c.S} about to step through`},
+  {id:"curtain", label:"Curtain reveal", f:c=>`heavy curtains drawn back by disembodied hands to reveal ${c.A}, while ${c.S} watches from the side`},
+  {id:"scale", label:"Scale shift", f:c=>`a gigantic ${c.O.n} towering like a monument over a tiny ${c.Sn}`},
+  {id:"material", label:"Material swap", f:c=>`${c.S} made entirely of ${c.M}, as if cast from it, holding ${c.O.a}`},
+  {id:"landscape", label:"Body becomes landscape", f:c=>`${c.S} whose face and shoulders dissolve into ${c.A}, the features continuing as part of the land`},
+  {id:"trapped", label:"Trapped inside", f:c=>`${c.S} curled up small inside ${c.C}`},
+  {id:"mirror", label:"The lying mirror", f:c=>`${c.S} facing a tall mirror whose reflection shows ${c.A} instead of the room`},
+  {id:"stairs", label:"Impossible architecture", f:c=>`a narrow white staircase rising out of nowhere and ending mid-air in the sky, with ${c.S} standing on the very top step`},
+  {id:"float", label:"Gravity switched off", f:c=>`${c.S} floating weightlessly above the ground beside ${c.O.a}, both casting sharp shadows far below`},
+  {id:"shadow", label:"Shadow tells the truth", f:c=>`${c.S} holding ${c.O.a}, while the shadow cast on the wall behind shows ${c.SH}`},
+  {id:"paint", label:"Painting reality", f:c=>`${c.S} painting ${c.A} onto a blank wall with a roller, the freshly painted part becoming real`},
+  {id:"alive", label:"Object comes alive", f:c=>`${c.O.a} with slender human legs and arms, posing gracefully like a person`},
+  {id:"hybrid", label:"Hybrid object", f:c=>`${c.O.a} fused seamlessly with ${c.O2.a}, one object transforming into the other`},
+  {id:"allegory", label:"Social pyramid", f:c=>`a crowd of tiny workers straining to hold up a platform on their shoulders, on which ${c.S} lounges beside ${c.O.a}`},
+  {id:"peel", label:"Peeling the sky", f:c=>`${c.S} peeling back the sky like wallpaper to reveal ${c.A} underneath`},
+  {id:"melt", label:"Melting", f:c=>`${c.O.a} slowly melting and dripping like warm wax over the edge of a stone block`},
+  {id:"crack", label:"Cracked open", f:c=>`a giant cracked porcelain head of ${c.S} lying on its side, spilling ${c.SP} out across the ground`},
+  {id:"strings", label:"Puppet strings", f:c=>`${c.S} suspended by marionette strings that rise up into the clouds, holding ${c.O.a}`},
+  {id:"bloom", label:"Nature grows through", f:c=>`${c.S} with ${c.FL} growing out of the head in place of a face`},
+  {id:"copies", label:"Endless copies", f:c=>`a long row of identical copies of ${c.S}, all facing the same way except one who turns to look back`},
+  {id:"window", label:"One open window", f:c=>`a vast wall of identical closed windows, with a single window open onto ${c.A} and ${c.S} leaning out`},
+  {id:"cloudhead", label:"Head in the clouds", f:c=>`${c.S} whose head is hidden inside a soft cumulus cloud`},
+];
+
+const SUBJECTS = ["a woman in a flowing red silk gown","a man in a dark suit and white shirt","an elderly woman in a floral dress","a ballerina in black pointe shoes","a businessman with a leather briefcase","a woman in a white linen dress","a hooded figure in a long brown robe","a young girl in a yellow raincoat","a classical white marble bust","an astronaut in a worn spacesuit","two lovers in an embrace","a man reading a newspaper","a woman in a patterned headscarf","an old gardener in overalls","a violinist in evening dress","a lone soldier in a long coat","a child holding a red balloon","a woman with dark braided hair in a blue dress","a fisherman in a knitted sweater","a bride in a long veil","a dancer mid-leap","a sleeping woman wrapped in white sheets"];
+const shortSub = s => s.replace(/^(a|an|two) /,"").split(/ (in|with|holding|wrapped|mid|reading) /)[0];
+
+const OBJECTS = ["red rose","wine glass","red stiletto heel","gilded birdcage","hourglass","goldfish bowl","smartphone","red apple","full moon","bird's nest with three eggs","violin","wooden ladder","antique brass key","black umbrella","string of pearls","pocket watch","porcelain teacup","light bulb","lit candle","birdhouse","globe of the Earth","pill capsule","theatre mask","rolled Persian carpet","open book","paper boat","kite","hot air balloon","vintage television set","padlock","white feather","pomegranate","rotary telephone","chess king","shopping bag"].map(n=>({n, a:(/^[aeiou]/.test(n)?"an ":"a ")+n}));
+
+const CONTAINERS = ["a glass bell jar","a giant wine glass","a smartphone fitted with prison bars","a transparent pill capsule","a gilded birdcage","the top half of an hourglass","a snow globe","a goldfish bowl","a perfume bottle","a plastic bag sealed with an expiry-date barcode","a light bulb","a teacup"];
+const MATERIALS = ["polished porcelain","liquid chrome","white Carrara marble","soft cumulus cloud","crimson velvet","clear glass","living moss and grass","hammered gold leaf","desert sand","folded paper","woven wicker","cracked eggshell","ice","Persian turquoise tilework","rusted iron","draped silk"];
+const WORLDS = ["a calm sea under drifting clouds","a blue sky full of cumulus clouds","a starlit night with a crescent moon","a sunlit Persian garden with a fountain","a tiny village beside a winding river","a stormy ocean","a burning orange sunset","a field of red poppies","a snowy mountain range","an empty theatre with red velvet seats","a dense green jungle","the deep blue sea with a single goldfish","a city skyline at night","an endless library","a tiny staircase leading to a lit doorway","a Mediterranean coastal town"];
+const SETTINGS = ["an endless salt flat with a mirror-like surface","a white minimalist terrace above the Mediterranean","a sun-bleached desert under a deep blue sky","a sea of clouds","an empty theatre stage","a rolling Tuscan landscape with cypress trees","a Persian garden with tall cypresses","an empty city street at dawn","a quiet beach at the edge of a calm sea","a field of yellow wildflowers","a modernist courtyard with a turquoise pool","a vast golden wheat field","a moonlit plain","a pastel-coloured town square","a seamless sky-blue studio backdrop","a crumbling classical ruin"];
+const SHADOWS = ["a bird escaping a cage","a child running","a wolf","a soldier with a rifle","someone bent over a phone","two lovers kissing","a much older version of the same person","a puppeteer"];
+const SPILLS = ["a river of pearls","drifting clouds","hundreds of butterflies","golden sand","rose petals","handwritten letters","tiny people climbing out","seawater and small fish"];
+const FLOWERS = ["white lilies","a pink peony","climbing roses","blue irises","a small olive tree","wild poppies","a bonsai tree"];
+
+const THEMES = [
+  {id:"digital", label:"Digital addiction", m:"our dependence on screens", obj:["smartphone","vintage television set","light bulb"], dev:["trapped","shadow","copies","replaced"]},
+  {id:"love", label:"Love and longing", m:"love and longing", obj:["red rose","wine glass","string of pearls","red stiletto heel"], dev:["hybrid","cloudhead","alive","bloom"]},
+  {id:"time", label:"Time and mortality", m:"the passing of time", obj:["hourglass","pocket watch","lit candle"], dev:["melt","trapped","landscape"]},
+  {id:"freedom", label:"Freedom and captivity", m:"freedom and captivity", obj:["gilded birdcage","kite","wooden ladder","padlock","antique brass key","white feather"], dev:["trapped","shadow","window","portal"]},
+  {id:"consumer", label:"Consumerism", m:"consumerism and excess", obj:["red apple","shopping bag","globe of the Earth","pill capsule","red stiletto heel"], dev:["allegory","trapped","material"]},
+  {id:"silence", label:"Silence and censorship", m:"silence and censorship", obj:["theatre mask","padlock","rotary telephone","open book"], dev:["curtain","replaced","strings"]},
+  {id:"lonely", label:"Loneliness", m:"loneliness in a crowded world", obj:["porcelain teacup","black umbrella","full moon"], dev:["copies","window","float"]},
+  {id:"planet", label:"The fragile planet", m:"a fragile environment", obj:["globe of the Earth","bird's nest with three eggs","paper boat"], dev:["melt","trapped","vessel","bloom"]},
+  {id:"identity", label:"Identity and masks", m:"identity and the masks we wear", obj:["theatre mask","chess king","string of pearls"], dev:["sliced","mirror","crack","replaced"]},
+  {id:"memory", label:"Memory and home", m:"memory and the idea of home", obj:["birdhouse","antique brass key","open book","paper boat"], dev:["vessel","cutout","replaced"]},
+  {id:"power", label:"Power and inequality", m:"power and inequality", obj:["chess king","wine glass","globe of the Earth"], dev:["allegory","strings","scale"]},
+  {id:"persian", label:"Persian poetry", m:"a line of classical Persian poetry: the moth and the candle, the nightingale and the rose", obj:["pomegranate","rolled Persian carpet","red rose","full moon","lit candle"], dev:["vessel","landscape","bloom","portal"]},
+  {id:"women", label:"Women and resilience", m:"women's resilience", obj:["red stiletto heel","pomegranate","string of pearls"], dev:["bloom","scale","peel"]},
+  {id:"dreams", label:"Dreams and escape", m:"dreams and escape", obj:["hot air balloon","paper boat","wooden ladder","kite"], dev:["stairs","portal","peel","paint"]},
+];
+
+const MEDIA = [
+  {id:"oil", label:"Oil painting", tag:"oil painting", lead:"A meticulous surrealist oil painting", fin:"smooth glazed brushwork, academic realism, fine canvas texture, museum quality"},
+  {id:"photo", label:"Fine-art photograph", tag:"fine art photography", lead:"A fine-art surreal photograph, staged for real in camera", fin:"shot on medium-format film, 80mm lens, natural textures and real fabrics, subtle grain, crisp focus", photo:true},
+  {id:"fashion", label:"Fashion editorial photo", tag:"fashion editorial photograph", lead:"A high-fashion editorial photograph with a surreal twist", fin:"styled wardrobe, flawless studio-grade lighting, glossy magazine finish, sharp detail", photo:true},
+  {id:"film", label:"Cinematic film still", tag:"cinematic film still", lead:"A still frame from an arthouse film", fin:"anamorphic lens, 35mm film grain, careful colour grading, cinematic depth", photo:true},
+  {id:"marble", label:"Marble sculpture", tag:"white marble sculpture", lead:"A white marble sculpture photographed in situ", fin:"the whole scene carved as one sculptural piece, chisel marks beside polished surfaces, raking museum light"},
+  {id:"bronze", label:"Bronze sculpture", tag:"patinated bronze sculpture", lead:"A cast bronze sculpture with green-gold patina, photographed in situ", fin:"lost-wax casting detail, polished highlights on worn patina, gallery photography"},
+  {id:"install", label:"Installation art", tag:"art installation", lead:"A large-scale site-specific art installation", fin:"built from real physical materials, documented with wide architectural photography, visitors for scale"},
+  {id:"gouache", label:"Gouache illustration", tag:"gouache illustration", lead:"A gouache illustration for a literary magazine cover", fin:"flat matte colour fields, soft dry-brush edges, subtle paper grain"},
+  {id:"collage", label:"Vintage paper collage", tag:"vintage paper collage", lead:"A surreal collage of cut-out vintage photographs and engravings", fin:"visible scissor edges, aged paper, halftone print texture, layered shadows"},
+  {id:"render", label:"3D render", tag:"3D render", lead:"A clean 3D rendered scene", fin:"soft global illumination, matte clay and glossy materials, physically based shading"},
+  {id:"miniature", label:"Persian miniature", tag:"Persian miniature painting", lead:"A Persian miniature painting", fin:"opaque watercolour and gold leaf, fine contour lines, flattened perspective, ornamental border"},
+  {id:"etching", label:"Copperplate etching", tag:"copperplate etching", lead:"A finely detailed copperplate etching", fin:"dense cross-hatching, black ink on cream paper, 19th-century engraving style"},
+  {id:"stop", label:"Stop-motion miniature", tag:"stop-motion miniature set", lead:"A handmade stop-motion miniature set", fin:"felt, clay and painted cardboard, tiny visible fingerprints, tilt-shift depth of field"},
+  {id:"poster", label:"Screen-printed poster", tag:"mid-century screen print poster", lead:"A mid-century screen-printed poster", fin:"three or four flat inks, halftone texture, bold graphic shapes, no text"},
+];
+
+const LINEAGE = [
+  {id:"auto", label:"Match the medium", p:""},
+  {id:"belgian", label:"Quiet Belgian surrealism", p:"in the tradition of René Magritte: deadpan, clean and enigmatic"},
+  {id:"dali", label:"Melting dreamscape", p:"in the spirit of Salvador Dalí's dreamscapes, with infinite plains and long shadows"},
+  {id:"minimal", label:"Contemporary minimal", p:"contemporary minimalist surrealism with pastel architecture and clean geometry"},
+  {id:"americana", label:"Mid-century Americana", p:"mid-century American illustration style, nostalgic and quietly satirical"},
+  {id:"renaissance", label:"Renaissance allegory", p:"composed like a Renaissance allegorical painting, with classical drapery and symbolism"},
+  {id:"metaphysical", label:"Metaphysical piazza", p:"in the metaphysical style of Giorgio de Chirico, with empty arcades and long shadows"},
+  {id:"pop", label:"Pop surrealism", p:"pop surrealism, glossy, candy-coloured and playful"},
+  {id:"gothic", label:"Dark gothic", p:"dark gothic surrealism, moody and theatrical"},
+];
+const PALETTES = ["sky blue and warm stone","neutral tones with one crimson accent","ultramarine and burning orange","pastel pink and powder blue","monochrome grey with a single red element","jewel tones of emerald, sapphire and ruby with gold","ochre, sand and terracotta","moonlit indigo and silver","Mediterranean turquoise and lemon yellow","pure black and white"];
+const LIGHTS = ["soft diffused daylight","hard midday sun with crisp long shadows","warm golden-hour light","blue-hour twilight","a single theatrical spotlight in darkness","even studio softbox light","cool moonlight"];
+const COMPS = ["centred and symmetrical","low horizon with a vast sky","intimate close-up in profile","wide shot with a small subject","overhead flat-lay","off-centre with generous negative space"];
+const MOODS = ["serene and dreamlike","melancholic","witty and ironic","quietly unsettling","romantic","satirical","hopeful","eerie"];
+const ARS = ["1:1","4:5","3:2","2:3","16:9","9:16"];
+const FORMATS = [{id:"natural",label:"Natural (Flux, GPT, Gemini)"},{id:"mj",label:"Midjourney"},{id:"sdxl",label:"Tags + negative (SDXL)"}];
+const ADJ = ["Quiet","Borrowed","Unspoken","Last","Weightless","Inner","Silent","Folded","Second","Invisible","Patient","Distant","Gentle","Hollow","Unfinished","Velvet"];
+
+// ---------- Helpers ----------
+const $ = s=>document.querySelector(s);
+const rnd = a=>a[Math.floor(Math.random()*a.length)];
+const cap = s=>s.charAt(0).toUpperCase()+s.slice(1);
+const titleCase = s=>s.split(" ").filter(w=>!/^(of|with|the|and)$/.test(w)).slice(-2).map(cap).join(" ");
+
+function fill(id, items, {random=true, val=x=>x, lab=x=>x}={}){
+  const el = document.getElementById(id);
+  el.innerHTML = (random?`<option value="">Random</option>`:"") + items.map((x,i)=>`<option value="${typeof x==="string"||!x.id?i:x.id}">${lab(x)}</option>`).join("");
+  el.addEventListener("change",()=>{el.classList.toggle("set", el.value!=="" && random); save();});
+}
+fill("f-device", DEVICES, {lab:x=>x.label});
+fill("f-theme", THEMES, {lab:x=>x.label});
+fill("f-subject", SUBJECTS);
+fill("f-object", OBJECTS, {lab:x=>x.n});
+fill("f-material", MATERIALS);
+fill("f-world", WORLDS);
+fill("f-setting", SETTINGS);
+fill("f-medium", MEDIA, {lab:x=>x.label});
+fill("f-lineage", LINEAGE, {lab:x=>x.label});
+fill("f-palette", PALETTES);
+fill("f-light", LIGHTS);
+fill("f-comp", COMPS);
+fill("f-mood", MOODS);
+fill("f-ar", ARS, {random:false});
+fill("f-format", FORMATS, {random:false, lab:x=>x.label});
+document.getElementById("f-ar").value = "1";
+
+const state = {twists:1, count:6, tab:"ideas", ideas:[], saved:[]};
+document.querySelectorAll(".seg").forEach(seg=>{
+  seg.addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    seg.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    state[seg.dataset.seg] = +b.dataset.v; save();
+  });
+});
+function setSeg(name,v){ document.querySelectorAll(`[data-seg="${name}"] button`).forEach(b=>b.setAttribute("aria-pressed", +b.dataset.v===v)); state[name]=v; }
+
+const get = id=>document.getElementById(id).value;
+const pickIdx = (id, arr)=>{ const v=get(id); return (v===""||!arr[+v])? rnd(arr) : arr[+v]; };
+const pickId = (id, arr)=>{ const v=get(id); return v===""? null : arr.find(x=>x.id===v); };
+
+// ---------- Generation ----------
+function buildIdea(wild=false){
+  const theme = wild ? (Math.random()<.75? rnd(THEMES): null) : (pickId("f-theme",THEMES) || (Math.random()<.55? rnd(THEMES): null));
+  let device = wild ? null : pickId("f-device",DEVICES);
+  if(!device){ if(theme && Math.random()<.5){ const want=rnd(theme.dev); device=DEVICES.find(d=>d.id===want); } if(!device) device=rnd(DEVICES); }
+
+  const custom = wild ? "" : $("#f-custom").value.trim();
+  const subj = custom || (wild? rnd(SUBJECTS) : pickIdx("f-subject",SUBJECTS));
+  let obj = wild ? null : (get("f-object")!==""? (OBJECTS[+get("f-object")]||null) : null);
+  if(!obj){ if(theme && Math.random()<.75){ const want=rnd(theme.obj); obj=OBJECTS.find(o=>o.n===want); } if(!obj) obj=rnd(OBJECTS); }
+  let obj2 = rnd(OBJECTS); while(obj2===obj) obj2 = rnd(OBJECTS);
+
+  const r = (id, arr)=> wild ? rnd(arr) : pickIdx(id, arr);
+  const medium = wild ? rnd(MEDIA) : (pickId("f-medium",MEDIA) || rnd(MEDIA));
+  let lineage = wild ? (Math.random()<.5? rnd(LINEAGE.slice(1)) : LINEAGE[0]) : (pickId("f-lineage",LINEAGE) || (Math.random()<.45? rnd(LINEAGE.slice(1)) : LINEAGE[0]));
+  if(medium.id==="miniature" && ["americana","pop","metaphysical"].includes(lineage.id)) lineage = LINEAGE[0];
+
+  const c = {S:subj, Sn:shortSub(subj), O:obj, O2:obj2, M:r("f-material",MATERIALS), A:r("f-world",WORLDS), C:rnd(CONTAINERS), SH:rnd(SHADOWS), SP:rnd(SPILLS), FL:rnd(FLOWERS)};
+  const scene = device.f(c);
+
+  let scene2 = "", device2 = null;
+  const twists = wild ? (Math.random()<.6?2:1) : state.twists;
+  if(twists===2){
+    const pool = ["melt","float","alive","hybrid","shadow","curtain","scale","material"].filter(id=>id!==device.id);
+    const want2=rnd(pool); device2 = DEVICES.find(d=>d.id===want2) || rnd(DEVICES);
+    const c2 = {...c, S:"a small distant figure", Sn:"distant figure", O:obj2, O2:rnd(OBJECTS), M:rnd(MATERIALS), A:rnd(WORLDS)};
+    scene2 = device2.f(c2);
+  }
+
+  const idea = {
+    id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    title: `The ${rnd(ADJ)} ${titleCase(device.id==="trapped"||device.id==="crack"||device.id==="sliced"||device.id==="copies"||device.id==="stairs"||device.id==="cloudhead"||device.id==="bloom"? c.Sn : obj.n)}`,
+    device, device2, theme, medium, lineage, scene, scene2,
+    setting: r("f-setting",SETTINGS), palette: r("f-palette",PALETTES), light: r("f-light",LIGHTS),
+    comp: r("f-comp",COMPS), mood: r("f-mood",MOODS), extra: wild? "" : $("#f-extra").value.trim(),
+    ar: ARS[+get("f-ar")], format: get("f-format") || "natural",
+    wild
+  };
+  idea.prompt = render(idea);
+  return idea;
+}
+
+function render(i){
+  const style = i.lineage.p ? `, ${i.lineage.p}` : "";
+  const second = i.scene2 ? ` Elsewhere in the frame, ${i.scene2}.` : "";
+  const meaning = i.theme ? ` A visual metaphor for ${i.theme.m}.` : "";
+  const extra = i.extra ? ` ${cap(i.extra)}.` : "";
+  const fmt = i.format;
+  if(fmt==="sdxl"){
+    const tags = [i.medium.tag, "surrealism", i.scene, i.scene2, i.setting, i.palette+" palette", i.light, i.comp+" composition", i.mood+" mood", i.lineage.p, i.theme?("metaphor for "+i.theme.m):"", i.extra, i.medium.fin, "masterpiece, highly detailed"].filter(Boolean).join(", ");
+    const neg = "text, watermark, signature, blurry, low quality, extra fingers, deformed hands, disfigured face, cluttered background" + (i.medium.photo ? ", painting, illustration, cartoon, CGI" : ", photograph");
+    return `${tags}\n\nNegative: ${neg}\nAspect ratio: ${i.ar}`;
+  }
+  const body = `${i.medium.lead}${style}. ${cap(i.scene)}.${second} Set in ${i.setting}. ${cap(i.palette)} palette, ${i.light}, ${i.comp} composition. Mood: ${i.mood}.${meaning}${extra} ${cap(i.medium.fin)}.`;
+  if(fmt==="mj") return `${body} --ar ${i.ar} --style raw --no text, watermark`;
+  return `${body} Aspect ratio ${i.ar}.`;
+}
+
+// ---------- UI ----------
+const grid = $("#grid");
+function cardHTML(i, n){
+  const saved = state.saved.some(s=>s.id===i.id);
+  const chips = [
+    `<span class="chip red">${i.medium.label}</span>`,
+    `<span class="chip">${i.device.label}</span>`,
+    i.device2 ? `<span class="chip">+ ${i.device2.label}</span>` : "",
+    i.theme ? `<span class="chip">${i.theme.label}</span>` : "",
+    i.lineage.id!=="auto" ? `<span class="chip">${i.lineage.label}</span>` : "",
+  ].join("");
+  return `<article class="card" data-id="${i.id}">
+    <div class="card-top"><h3>${i.title}</h3><span class="no">${i.wild?"surprise":"no."} ${String(n).padStart(2,"0")}</span></div>
+    <div class="chips">${chips}</div>
+    <pre class="prompt">${i.prompt.replace(/</g,"&lt;")}</pre>
+    <div class="card-actions">
+      <button type="button" class="btn-primary btn-sm" data-act="copy">Copy prompt</button>
+      <button type="button" class="btn-ghost btn-sm ${saved?"saved-on":""}" data-act="save">${saved?"Saved":"Save"}</button>
+      <button type="button" class="btn-ghost btn-sm" data-act="vary">Variations</button>
+      <button type="button" class="btn-ghost btn-sm" data-act="reroll">Reroll</button>
+    </div>
+  </article>`;
+}
+function draw(){
+  const list = state.tab==="ideas" ? state.ideas : state.saved;
+  $("#savedCount").textContent = state.saved.length ? `(${state.saved.length})` : "";
+  $("#resultsTitle").textContent = state.tab==="saved" ? "Saved prompts" : (state.ideas[0]?.wild ? "A surprise set" : "Fresh ideas");
+  document.querySelectorAll("[data-tab]").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===state.tab));
+  grid.innerHTML = list.length ? list.map((i,n)=>cardHTML(i,n+1)).join("")
+    : `<div class="empty">${state.tab==="saved" ? "Nothing saved yet. Press Save on any idea to keep its prompt here." : "Press Generate ideas to start."}</div>`;
+}
+function generate(wild=false){
+  state.tab = "ideas";
+  state.ideas = [];
+  for(let k=0;k<(wild?3:state.count);k++){ for(let t=0;t<5;t++){ try{ state.ideas.push(buildIdea(wild)); break; }catch(err){ console.error(err); } } }
+  if(!state.ideas.length) toast("Something went wrong. Press Reset and try again.");
+  draw();
+}
+
+function findIdea(id){ return state.ideas.find(x=>x.id===id) || state.saved.find(x=>x.id===id); }
+grid.addEventListener("click", e=>{
+  const b = e.target.closest("button[data-act]"); if(!b) return;
+  const id = b.closest(".card").dataset.id, idea = findIdea(id);
+  if(b.dataset.act==="copy") copy(idea.prompt);
+  if(b.dataset.act==="save"){
+    const k = state.saved.findIndex(s=>s.id===id);
+    if(k>=0){ state.saved.splice(k,1); toast("Removed from saved"); } else { state.saved.unshift(serial(idea)); toast("Saved"); }
+    persist(); draw();
+  }
+  if(b.dataset.act==="reroll"){
+    const fresh = buildIdea(idea.wild);
+    const k = state.ideas.findIndex(x=>x.id===id);
+    if(k>=0){ state.ideas[k]=fresh; draw(); }
+  }
+  if(b.dataset.act==="vary"){
+    // keep the core idea (device, subject scene, theme, medium), vary the look
+    state.tab="ideas";
+    state.ideas = [idea, ...Array.from({length:3},()=>{
+      const v = {...idea, id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), wild:false,
+        medium: Math.random()<.6? rnd(MEDIA): idea.medium, setting:rnd(SETTINGS), palette:rnd(PALETTES), light:rnd(LIGHTS), comp:rnd(COMPS), mood:rnd(MOODS)};
+      v.prompt = render(v); return v;
+    })];
+    draw(); window.scrollTo({top: grid.getBoundingClientRect().top + scrollY - 90, behavior:"smooth"});
+  }
+});
+
+$("#controls").addEventListener("submit", e=>{e.preventDefault(); generate(false);});
+$("#surpriseTop").addEventListener("click", ()=>generate(true));
+$("#surpriseSide").addEventListener("click", ()=>generate(true));
+$("#reset").addEventListener("click", ()=>{
+  document.querySelectorAll("#controls select").forEach(s=>{ if(s.id!=="f-ar"&&s.id!=="f-format"){ s.value=""; s.classList.remove("set"); } });
+  $("#f-custom").value=""; $("#f-extra").value=""; setSeg("twists",1); setSeg("count",6); save(); toast("Settings reset");
+});
+// formats re-render current prompts
+["f-format","f-ar"].forEach(id=>document.getElementById(id).addEventListener("change", ()=>{
+  state.ideas.forEach(i=>{ i.format=get("f-format"); i.ar=ARS[+get("f-ar")]; i.prompt=render(i); }); draw();
+}));
+document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>{state.tab=b.dataset.tab; draw();}));
+$("#copyAll").addEventListener("click", ()=>{
+  const list = state.tab==="ideas"? state.ideas : state.saved;
+  if(!list.length) return toast("No prompts to copy");
+  copy(list.map((i,n)=>`${n+1}. ${i.title}\n${i.prompt}`).join("\n\n"));
+});
+
+function copy(text){
+  const done = ()=>toast("Copied");
+  try{ navigator.clipboard.writeText(text).then(done, ()=>fallback(text)); }catch(_){ fallback(text); }
+}
+function fallback(text){
+  const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select();
+  let ok=false; try{ ok=document.execCommand("copy"); }catch(_){}
+  ta.remove(); toast(ok? "Copied" : "Select the prompt text and copy it manually");
+}
+let tt; function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove("show"),1600); }
+
+// ---------- Storage (per-viewer convenience) ----------
+function serial(i){ return {...i, device:{id:i.device.id,label:i.device.label}, device2:i.device2?{id:i.device2.id,label:i.device2.label}:null}; }
+function persist(){ try{ localStorage.setItem("sps-saved", JSON.stringify(state.saved)); }catch(_){} }
+function save(){ try{
+  const s={}; document.querySelectorAll("#controls select, #controls input").forEach(el=>s[el.id]=el.value);
+  s.twists=state.twists; s.count=state.count; localStorage.setItem("sps-settings", JSON.stringify(s));
+}catch(_){} }
+function restore(){ try{
+  const sv = JSON.parse(localStorage.getItem("sps-saved")||"[]"); if(Array.isArray(sv)) state.saved = sv;
+  const s = JSON.parse(localStorage.getItem("sps-settings")||"null");
+  if(s){ Object.entries(s).forEach(([k,v])=>{ const el=document.getElementById(k); if(el){ el.value=v; if(el.tagName==="SELECT" && el.selectedIndex<0) el.selectedIndex=0; if(el.tagName==="SELECT"&&k!=="f-ar"&&k!=="f-format") el.classList.toggle("set", v!==""); } });
+    if(s.twists) setSeg("twists",s.twists); if(s.count) setSeg("count",s.count); }
+}catch(_){} }
+restore();
+if(!get("f-format")) document.getElementById("f-format").value="natural";
+if(!get("f-ar")) document.getElementById("f-ar").value="1";
+generate(false);
+</script>
+
+</body></html>
